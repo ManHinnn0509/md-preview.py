@@ -4,7 +4,7 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-from util.file_utils import read_file
+from util.file_utils import read_file, send_request
 
 class MainWindow:
     def __init__(self) -> None:
@@ -34,6 +34,7 @@ class MainWindow:
                 if abs_filepath.endswith('.md'):
                     self.browser.setUrl(QUrl.fromLocalFile(abs_filepath))
                     event.acceptProposedAction()
+                    self.__render(abs_filepath)
                     return
         
         event.ignore()
@@ -41,7 +42,18 @@ class MainWindow:
     def __render(self, abs_filepath: str):
         s = read_file(abs_filepath)
         if (s == None):
+            print(f"[ERROR] Unable to read .md file from: [{abs_filepath}]")
             return
+
+        token = os.getenv("GITHUB_TOKEN")
+        html = send_request(s, token)
+
+        if (html == None):
+            print(f"[ERROR] Unable to render .md file from GitHub API")
+            return
+
+        self.browser.setHtml(html)
+
         
 
     def __get_default_html(self):
