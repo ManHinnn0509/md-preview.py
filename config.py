@@ -1,0 +1,1 @@
+DEFAULT_CSS_FILE_PATH = "./css/github-markdown-dark.min.css"
