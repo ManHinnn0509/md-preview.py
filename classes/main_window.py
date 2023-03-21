@@ -2,39 +2,58 @@ import os
 
 import requests as req
 
-from PyQt5.QtCore import QUrl, QDir
+from PyQt5.QtCore import Qt, QUrl, QFileSystemWatcher
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineScript
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineScript, QWebEnginePage
 
 from util.file_utils import read_file
+from config import WINDOW_TITLE
+
+class WebEnginePage(QWebEnginePage):
+    
+    def acceptNavigationRequest(self, url: QUrl, type: 'QWebEnginePage.NavigationType', isMainFrame: bool) -> bool:
+        # return super().acceptNavigationRequest(url, type, isMainFrame)
+        # print(url.scheme())
+        # print(url.path())
+        # print(url.url())
+        if (url.scheme().startswith("http")):
+            return False
+
+        return True
 
 class MainWindow:
-    def __init__(self, token: str, css_path: str) -> None:
+    def __init__(self, token: str, css_path: str, css_content: str) -> None:
         self.app = QApplication([])
         self.browser = QWebEngineView()
+        self.fs_watcher = QFileSystemWatcher([])
+        self.fs_watcher.fileChanged.connect(self.__file_changed)
 
         self.token = token
         self.css_path = css_path
-        self.css_content = read_file(css_path)
-        print(self.css_content == None)
+        self.css_content = css_content
+
+        # self.page = WebEnginePage(self.browser)
+        # self.browser.setPage(self.page)
+        self.browser.setContextMenuPolicy(Qt.NoContextMenu)
 
         self.browser.setAcceptDrops(True)
         self.browser.dragEnterEvent = self.__drag_enter_event
         self.browser.dropEvent = self.__drop_event
 
-        self.browser.setWindowTitle("GitHub README Renderer")
+        self.browser.setWindowTitle(WINDOW_TITLE)
         self.browser.setHtml(self.__get_default_html())
     
     def start(self):
         self.browser.show()
         self.app.exec_()
 
-    def __render(self, abs_filepath: str):
-        content = read_file(abs_filepath)
+    def __render(self, md_abspath: str):
+        content = read_file(md_abspath)
         if (content == None):
-            print(f"[ERROR] Unable to read .md file from: [{abs_filepath}]")
+            print(f"[ERROR] Unable to read .md file from: [{md_abspath}]")
             return
 
+        # Send request to GitHub API
         r = req.post(
             url="https://api.github.com/markdown",
             headers={
@@ -55,11 +74,12 @@ class MainWindow:
             # Load the rendered HTML
             html,
             # Kinda like set the current directory to where the dropped .md file is
-            QUrl.fromLocalFile(abs_filepath)
+            QUrl.fromLocalFile(md_abspath)
         )
         
         # css files & load
 
+        # From: https://github.com/sindresorhus/github-markdown-css#usage
         md_body_style = '''
             .markdown-body {
                 box-sizing: border-box;
@@ -69,6 +89,7 @@ class MainWindow:
                 padding: 45px;
             }
 
+            /* I don't think this works but I'm just gonna keep it here */
             @media (max-width: 767px) {
                 .markdown-body {
                     padding: 15px;
@@ -82,7 +103,6 @@ class MainWindow:
         '''
         self.__load_css("github_css", self.css_content)
         self.__load_css("md_body", md_body_style)
-        
 
     def __format_html(self, content: str):
         html = f'''
@@ -95,7 +115,7 @@ class MainWindow:
 
         return html
 
-    def __load_css(self, javascript_name, css_content):
+    def __load_css(self, javascript_name: str, css_content: str):
         # Modified from: https://stackoverflow.com/a/51389886
         javascript = """
             (function() {
@@ -123,6 +143,14 @@ class MainWindow:
 
         return html
 
+    # --- Events ---
+
+    def __file_changed(self, path):
+        # Solution from: https://ymt-lab.com/en/post/2021/pyqt5-qfilesystemwatcher-test/
+        self.browser.setWindowTitle(WINDOW_TITLE + " " + "(Reloading...)")
+        self.__render(path)
+        self.browser.setWindowTitle(WINDOW_TITLE)
+
     def __drag_enter_event(self, event):
         if (event.mimeData().hasUrls()):
             event.acceptProposedAction()
@@ -133,9 +161,22 @@ class MainWindow:
                 filepath = url.toLocalFile()
                 abs_filepath = os.path.abspath(filepath)
                 if abs_filepath.endswith('.md'):
-                    self.browser.setUrl(QUrl.fromLocalFile(abs_filepath))
-                    event.acceptProposedAction()
+
+                    url = QUrl.fromLocalFile(abs_filepath)
+
+                    self.browser.setUrl(url)
                     self.__render(abs_filepath)
+                    
+                    # Clear all the paths, empty the list
+                    fs_files = self.fs_watcher.files()
+                    if (len(fs_files) != 0):
+                        self.fs_watcher.removePaths(fs_files)
+                    
+                    # Add the current file to monitor
+                    self.fs_watcher.addPath(abs_filepath)
+
+                    event.acceptProposedAction()
+                    
                     return
         
         event.ignore()
