@@ -20,7 +20,7 @@ class MainWindow:
         self.app = QApplication([])
         self.browser = QWebEngineView()
 
-        self.fs_watcher = FileSystemWatcher([])
+        self.fs_watcher = FileSystemWatcher()
         self.fs_watcher.fileChanged.connect(self.__file_changed)
 
         self.token = token
