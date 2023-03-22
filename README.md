@@ -18,7 +18,7 @@ I suggest to use a venv but it's up to you
 When you save the changes on the opened markdown file, you will see "Reloading..." from the title.
 The application is reading the markdown content & sending request to GitHub's API for rendering. This won't take long.
 
-I set the maximum width to be 1000 (Should be pixels), see [here](https://github.com/sindresorhus/github-markdown-css#usage)
+I set the maximum width to be 1000 (Should be pixels), see [here](https://github.com/sindresorhus/github-markdown-css#usage) for reason
 
 When you click on any URL or links on the markdown file it will be opened in browser. (Or maybe text editor for text files)
 
@@ -36,7 +36,7 @@ Some of the packages may not appear in the `requirements.txt` file. I will try t
 
 ## Demo
 ### After launching
-<img src="./imgs/demo/start.png" width="50%" height="50%">
+<img src="./imgs/demo/start.png" width="70%" height="70%">
 
 ### Loaded a markdown file
-<img src="./imgs/demo/loaded.png" width="50%" height="50%">
+<img src="./imgs/demo/loaded.png" width="70%" height="70%">
