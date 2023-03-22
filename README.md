@@ -34,9 +34,20 @@ See [requirements.txt](./requirements.txt)
 
 Some of the packages may not appear in the `requirements.txt` file. I will try to add any missing ones.
 
+## .env file
+You need to create a `.env` file for storing a GitHub access token (For the GitHub API only)
+
+Here's the format:
+
+```
+GITHUB_TOKEN=YOUR_TOKEN_HERE
+```
+
 ## Demo
 ### After launching
 <img src="./imgs/demo/start.png" width="70%" height="70%">
 
 ### Loaded a markdown file
 <img src="./imgs/demo/loaded.png" width="70%" height="70%">
+
+<img src="./imgs/demo/loaded-2.png" width="70%" height="70%">
