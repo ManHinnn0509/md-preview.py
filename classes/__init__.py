@@ -1,3 +1,3 @@
 from classes.main_window import MainWindow
-
-# from classes.file_system_watcher import FileSystemWatcher
+from classes.file_system_watcher import FileSystemWatcher
+from classes.web_engine_page import WebEnginePage

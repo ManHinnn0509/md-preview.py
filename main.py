@@ -15,14 +15,16 @@ def main():
     
     token = token.strip()
     css_path = os.path.abspath(DEFAULT_CSS_FILE_PATH)
+    
     css_content = read_file(css_path)
-
     if (css_content == None):
         print("[ERROR] Unable to read css content")
         return
 
     w = MainWindow(token, css_path, css_content)
     w.start()
+
+    print("--- End of Program ---")
 
 if (__name__ == "__main__"):
     load_dotenv()
